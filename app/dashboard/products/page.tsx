@@ -17,7 +17,7 @@ export default async function ProductsPage() {
             {products.map((p: any) => (
               <tr key={p.id}>
                 <td style={{ fontFamily: "monospace", fontSize: 12 }}>{p.sku}</td>
-                <td><Link href={`/dashboard/products/${p.id}`} style={{ fontWeight: 600, textDecoration: "underline" }}>{p.name}</Link><div style={{ opacity: 0.5, fontSize: 11 }}>{p.manufacturerArticle}</div></td>
+                <td><Link href={`/dashboard/products/${p.id}`} style={{ fontWeight: 600, textDecoration: "underline" }}>{p.name}</Link></td>
                 <td>{p.category?.name || "-"}</td>
                 <td style={{ fontWeight: 700, color: p.currentStock <= p.minStock ? "#d00" : "#111" }}>{p.currentStock} {p.unit}</td>
                 <td>{String(p.salePrice)} {p.currency}</td>
@@ -27,7 +27,6 @@ export default async function ProductsPage() {
             ))}
           </tbody>
         </table>
-        {products.length === 0 && <div style={{ padding: 30, textAlign: "center", opacity: 0.5 }}>Товаров пока нет. Создайте первый.</div>}
       </div>
     </div>
   )
