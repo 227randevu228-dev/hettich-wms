@@ -16,8 +16,8 @@
     "next": "^14.2.35",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
-    "@prisma/client": "^5.12.0",
-    "next-auth": "^5.0.0-beta.15",
+    "@prisma/client": "^6.12.0",
+    "next-auth": "5.0.0-beta.15",
     "bcryptjs": "^2.4.3",
     "zod": "^3.23.0",
     "zustand": "^4.5.2",
@@ -26,7 +26,7 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
-    "prisma": "^5.12.0",
+    "prisma": "^6.12.0",
     "typescript": "^5.4.0",
     "tsx": "^4.7.0",
     "vitest": "^1.4.0",
