@@ -17,7 +17,7 @@
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
     "@prisma/client": "^6.12.0",
-    "@auth/prisma-adapter": "^2.8.0",
+    "@auth/prisma-adapter": "^1.7.4",
     "next-auth": "5.0.0-beta.15",
     "bcryptjs": "^2.4.3",
     "zod": "^3.23.0",
