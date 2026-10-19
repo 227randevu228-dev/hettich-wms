@@ -1,5 +1,5 @@
-
 import { prisma } from "@/lib/prisma"
+import { ProductActions } from "./ProductActions"
 import Link from "next/link"
 
 export default async function ProductsPage() {
@@ -12,9 +12,9 @@ export default async function ProductsPage() {
       </div>
       <div className="card" style={{ padding: 0, overflow: "hidden" }}>
         <table className="table">
-          <thead><tr><th>SKU</th><th>Название</th><th>Категория</th><th>Остаток</th><th>Цена продажи</th><th>Статус</th></tr></thead>
+          <thead><tr><th>SKU</th><th>Название</th><th>Категория</th><th>Остаток</th><th>Цена продажи</th><th>Статус</th><th>Действия</th></tr></thead>
           <tbody>
-            {products.map(p => (
+            {products.map((p: any) => (
               <tr key={p.id}>
                 <td style={{ fontFamily: "monospace", fontSize: 12 }}>{p.sku}</td>
                 <td><Link href={`/dashboard/products/${p.id}`} style={{ fontWeight: 600, textDecoration: "underline" }}>{p.name}</Link><div style={{ opacity: 0.5, fontSize: 11 }}>{p.manufacturerArticle}</div></td>
@@ -22,6 +22,7 @@ export default async function ProductsPage() {
                 <td style={{ fontWeight: 700, color: p.currentStock <= p.minStock ? "#d00" : "#111" }}>{p.currentStock} {p.unit}</td>
                 <td>{String(p.salePrice)} {p.currency}</td>
                 <td><span className="badge">{p.status}</span></td>
+                <td><ProductActions id={p.id} /></td>
               </tr>
             ))}
           </tbody>
