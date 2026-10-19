@@ -1,0 +1,13 @@
+
+* { box-sizing: border-box; margin: 0; padding: 0 }
+body { font-family: Inter, system-ui, -apple-system, sans-serif; background: #f6f7fb; color: #111; }
+a { color: inherit; text-decoration: none }
+input, button, select, textarea { font: inherit }
+.card { background: white; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.06); padding: 20px; }
+.btn { padding: 10px 16px; border-radius: 10px; border: 0; cursor: pointer; font-weight: 600 }
+.btn-primary { background: #111; color: white }
+.btn-ghost { background: #eee }
+.input { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 10px; background: white }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; background: #eee }
+.table { width: 100%; border-collapse: collapse }
+.table th, .table td { text-align: left; padding: 10px; border-bottom: 1px solid #eee; font-size: 14px }

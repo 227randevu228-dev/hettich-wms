@@ -1,0 +1,191 @@
+
+// Hettich WMS - PostgreSQL + Prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  STOREKEEPER
+  MANAGER
+  VIEWER
+}
+
+enum ProductStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum OperationType {
+  INBOUND
+  OUTBOUND_SALE
+  OUTBOUND_ISSUE
+  OUTBOUND_WRITEOFF
+  ADJUSTMENT
+  TRANSFER
+  RETURN_FROM_CUSTOMER
+  RETURN_TO_SUPPLIER
+}
+
+enum Currency {
+  UZS
+  USD
+  EUR
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  name          String
+  passwordHash  String
+  role          Role     @default(VIEWER)
+  isActive      Boolean  @default(true)
+  mustChangePassword Boolean @default(false)
+  lastLoginAt   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  createdById   String?
+  createdBy     User?    @relation("UserCreatedBy", fields: [createdById], references: [id])
+  createdUsers  User[]   @relation("UserCreatedBy")
+  
+  operations    StockOperation[]
+  auditLogs     AuditLog[]
+  priceHistoryCreated PriceHistory[]
+
+  @@index([email])
+  @@index([role])
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  parentId    String?
+  parent      Category? @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+  products    Product[]
+  createdAt   DateTime @default(now())
+}
+
+model Product {
+  id                String   @id @default(cuid())
+  sku               String   @unique // Уникальный внутренний код - UNIQUE на уровне БД
+  manufacturerArticle String // Артикул Hettich, точное сохранение
+  name              String
+  categoryId        String?
+  category          Category? @relation(fields: [categoryId], references: [id])
+  subcategory       String?
+  series            String?
+  description       String?  @db.Text
+  unit              String   @default("шт") // шт, комплект, пара, упаковка
+  purchasePrice     Decimal  @db.Decimal(18,4)
+  salePrice         Decimal  @db.Decimal(18,4)
+  currency          Currency @default(UZS)
+  currentStock      Int      @default(0)
+  reservedStock     Int      @default(0)
+  minStock          Int      @default(0)
+  storageLocation   String?  // склад/зона/стеллаж/полка
+  barcode           String?
+  imageUrl          String?
+  status            ProductStatus @default(ACTIVE)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  operations        StockOperation[]
+  priceHistory      PriceHistory[]
+  stockLedger       StockLedger[]
+
+  @@index([sku])
+  @@index([manufacturerArticle])
+  @@index([name])
+  @@index([status])
+  @@index([categoryId])
+
+  // Целостность: остаток = сумма движений, проверяется транзакцией
+}
+
+model StockOperation {
+  id              String   @id @default(cuid())
+  productId       String
+  product         Product  @relation(fields: [productId], references: [id])
+  type            OperationType
+  quantity        Int // Положительное для прихода, отрицательное для расхода - но храним как модуль с типом
+  purchasePriceAtOperation Decimal? @db.Decimal(18,4)
+  salePriceAtOperation     Decimal? @db.Decimal(18,4)
+  supplier        String?
+  customer        String?
+  documentNumber  String?
+  comment         String?  @db.Text
+  reason          String?
+  fromLocation    String?
+  toLocation      String?
+  resultingStock  Int // Остаток после операции - для неизменяемой истории
+  createdAt       DateTime @default(now())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+
+  @@index([productId, createdAt])
+  @@index([type])
+  @@index([userId])
+}
+
+model StockLedger {
+  // Неизменяемый журнал для восстановления остатков на дату
+  id          String   @id @default(cuid())
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+  delta       Int
+  balanceAfter Int
+  operationId String? @unique
+  createdAt   DateTime @default(now())
+
+  @@index([productId, createdAt])
+}
+
+model PriceHistory {
+  id          String   @id @default(cuid())
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+  oldPurchase Decimal? @db.Decimal(18,4)
+  newPurchase Decimal? @db.Decimal(18,4)
+  oldSale     Decimal? @db.Decimal(18,4)
+  newSale     Decimal? @db.Decimal(18,4)
+  effectiveFrom DateTime @default(now())
+  createdById String
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@index([productId, createdAt])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
+  action      String // LOGIN, CREATE_PRODUCT, UPDATE_PRICE, INBOUND, etc
+  entityType  String // Product, User, Operation, Settings
+  entityId    String?
+  beforeJson  Json?
+  afterJson   Json?
+  ip          String?
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+  @@index([entityType, entityId])
+}
+
+model SystemSettings {
+  id              String @id @default("singleton")
+  valuationMethod String @default("WEIGHTED_AVERAGE") // WEIGHTED_AVERAGE, FIFO
+  defaultCurrency Currency @default(UZS)
+  allowNegativeStock Boolean @default(false)
+  lowStockNotifications Boolean @default(true)
+  updatedAt       DateTime @updatedAt
+}
